@@ -1,0 +1,6 @@
+# 
+# requirements
+# 
+#---package-------------version-----
+    fabric
+    pyyaml
