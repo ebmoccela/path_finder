@@ -2,3 +2,6 @@
 #Environments
 .venv
 venv/
+
+#files
+*.yml
