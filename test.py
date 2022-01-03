@@ -28,7 +28,7 @@ def result_manipulator(result, result_sudo, hostname, user):
 def one_connection(hostname, path):
     # config = Config(overrides={'sudo': {'password': conn_settings_list[f'{hostname}']['password']}})
     server = conn_settings_list[f'{hostname}']['hostname']
-    user = conn_settings_list[f'{hostname}']['user']
+    server_user = conn_settings_list[f'{hostname}']['user']
     # password = conn_settings_list[f'{hostname}']['password']
     conn = Connection(host=conn_settings_list[f'{hostname}']['host'], 
         user=conn_settings_list[f'{hostname}']['user'], 
@@ -38,20 +38,39 @@ def one_connection(hostname, path):
     # sudopass = Responder(pattern = r"\[sudo\]", response = f'{password}\n')
     #test = conn.sudo("-i ls")   #need to run -i to log in
     #TODO condition if file extension given
-    result = conn.run(f'find -path \*{path}.* -prune')
-    result_root = conn.sudo(f'-i find -path \*{path}.* -prune')
-    result_dict = result_manipulator(result.stdout, result_root.stdout, server, user)
-    print(result_dict)
+    try:
+        conn.run('whoami', hide=True)
+        result = conn.run(f'find -path \*{path}.* -prune')
+        result_root = conn.sudo(f'-i find -path \*{path}.* -prune')
+        result_dict = result_manipulator(result.stdout, result_root.stdout, server, server_user)
+        print(result_dict)
+    except Exception as e:
+        print(e)
 
 #multiple arguments
-def multi_connection():
+def multi_connection(path):
+    result_dict = {}
     for key, val in conn_settings_list.items():
-        conn = Connection(host=val['host'], user=val['user'], port=val['port'], connect_kwargs={"password": val['password']})
-        conn.run('whoami')
-# sudo_pass = Config(overrides={'sudo': {'password': 'pizzatime'}})
-# conn.run('ls', pty=True, watchers=[sudopass])
+        server = conn_settings_list[f'{key}']['hostname']
+        server_user = conn_settings_list[f'{key}']['user']
+        conn = Connection(host=conn_settings_list[f'{key}']['host'], 
+            user=conn_settings_list[f'{key}']['user'], 
+            port=conn_settings_list[f'{key}']['port'],
+            config=Config(overrides={'sudo': {'password': conn_settings_list[f'{key}']['password']}}),
+            connect_kwargs={"password": conn_settings_list[f'{key}']['password']})
+        try:
+            conn.run('whoami')  #add hide=True
+            result = conn.run(f'find -path \*{path}.* -prune')
+            result_root = conn.sudo(f'-i find -path \*{path}.* -prune')
+            result_dict[f'{key}'] = result_manipulator(result.stdout, result_root.stdout, server, server_user)
+            if len(result_dict) > 0:
+                result_dict = result_dict[f'{key}'].update(result_dict)
+            print(result_dict)
+        except Exception as e:
+            print(e)
 
-one_connection('host1', 'file_test')
+#one_connection('host1', 'file_test')
+multi_connection('file_test')
 
 # def result_manipulator(result, hostname):
 #     list_paths = list(result.split(" "))
