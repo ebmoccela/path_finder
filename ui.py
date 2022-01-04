@@ -2,7 +2,7 @@ from tkinter import *
 from tkinter import ttk
 
 def create_input_frame(container):
-    frame = Frame(container)
+    frame = Frame(container, bg='blue')
 
     frame.columnconfigure(0, weight=1)
     frame.columnconfigure(0, weight=3)
@@ -14,22 +14,39 @@ def create_input_frame(container):
     keyword.grid(column=1, row=0, sticky=W)
     combobox = ttk.Combobox(frame, values=["test1", "test2"])
     combobox.grid(column=1, row=1)
-
-
+    button = Button(frame, text="Find Path").grid(column=1, row=3)
     return frame
 
-def test():
-    pass
+
+def new_window():
+    global top
+    top = Toplevel(root)
+    top.geometry('500x500')
+    top.title('Add Server')
+    top.resizable(0, 0)
+    lbl = Label(top, text="test")
+    lbl.pack()
+    my_menu.entryconfig("File", state="disabled")
+    top.protocol("WM_DELETE_WINDOW", close_top)
+
+    
+def close_top():
+    my_menu.entryconfig("File", state="normal")
+    top.destroy()
 
 def create_menu(container):
+    global my_menu
     my_menu = Menu(container)
     container.config(menu=my_menu)
     file_menu = Menu(my_menu)
     my_menu.add_cascade(label="File", menu=file_menu)
-    file_menu.add_command(label="add server", command=test)
+
+    file_menu.add_command(label="add server", command=new_window)
+    
     return my_menu
 
 def create_main_window():
+    global root 
     root = Tk()
     root.title("Path Finder")
     root.geometry('500x500')
